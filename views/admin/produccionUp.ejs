@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="css/produccionUp.css">
+    <style>
+        .table-center td{text-align: center;}
+    </style>
+    <title>SENA</title>
+</head>
+
+<body>
+    <div class="content-header">
+        <%- include('../partials/header-admin'); %>
+    </div>
+    <div class="main-contenedor">
+        <div class="body-info-section">
+            <div class="contenedor-general">
+                <div class="breadcrumb">
+                    <a href="/admin" class="go-home">Volver al inicio</a>  | <a href="#">Produccion</a>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"><h1 class="h-title">Administrar Producción de la UP</h1></div>
+                    <div class="col-md-6" style="text-align: end;"> 
+                        <button class="btn btn-secondary"
+                        onclick="ModalAsignarProducto()">
+                            Asignar Producto a P.V
+                        </button>
+                        <button class="btn btn-primary" id="Openform" class="btn-edit2"
+                        data-bs-toggle="modal" data-bs-target="#myModal">
+                            <span class="icon-library_add"></span> Nueva Producción
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="ListaProdu">
+                        <table class="table table-center table-striped" id="tablaProducccion">
+                            <thead>
+                                <th></th>
+                                <th>U.P</th>
+                                <th>Producto</th>
+                                <th>Producido</th>
+                                <th>Distribuido</th>
+                                <th>Disponible</th>
+                                <th>Observación</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </thead>
+                            <tbody id="tabla">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============MODAL DE REGISTRO================= -->
+        <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-s">
+                <div class="modal-content col-4">
+                    <div class="modal-header">
+                        <div class="reserva">
+                            <label class="encabezado">Registro de producción</label>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="main">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4 id="nameup" class="encabezado"></h4>
+                                </div>
+                            </div>
+                            <div class="content-main">
+                                <form id="form-produccion">
+                                    <!--------SELECCIONA PRODUCTO------>
+                                    <div class="row mt-2">
+                                        <div class="col-md-12 mb-2">
+                                            <label for="unidadesPrd">Selecciona U.P</label>
+                                            <select id="unidadesPrd" onchange="Listar_Producciones();" class="form-select">
+                                                <% for(var i=0; i<up.length;i++){%>
+                                                    <option class="visible" value="<%=up[i].codigo_up%>">
+                                                        <%=up[i].Nombre%>
+                                                    </option>
+                                                <% } %>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="col-md-12">
+                                                <select id="pdto" class="form-select">
+                                                    <option value="" selected disabled>Selecciona un producto</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" type="number" 
+                                            id="cantidad" placeholder="Cantidad" min="1" max="50">
+                                        </div>
+                                    </div>
+                                    <div class="describe">
+                                        Nuevas Observaciones<textarea style="width: 100%;" class="textDescribe" name="" id="observacion"
+                                            cols="30" rows="10"></textarea>
+                                    </div>
+                                    <div class="btn" style="width: 100%;"><input class="boton" type="button" value="Registar"
+                                        onclick="RegistrarProduccion();"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ======================Lista de produccion====================== -->
+        <div class="modal fade" id="modalDistribucion" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Asignar Distribución</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <input type="hidden" id="id-inventario">
+                            <input type="hidden" id="id-produccion">
+                            <input type="hidden" id="id-producto">
+                            <div class="col-md-12 mb-2">
+                                <label>Producto</label>
+                                <input type="text" class="form-control" disabled id="producto-distribucion">
+                            </div>
+                            <div class="col-md-7">
+                                <label for="punto-venta">Punto Venta</label>
+                                <select class="form-select" id="punto-venta"></select>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="number" class="form-control mt-4" id="cantidad-distribuir" placeholder="Cantidad...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="Distribuir()">Distribuir</button>
+                    </div>
+                </div>
+            </div>  
+        </div>
+        <!--------------LISTA DISRIBUCIONES------------------->
+        <div class="modal fade" id="modalMostrarDistribucion" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Distribuciones</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-bordered table-striped" id="table-distribuciones">
+                            <thead>
+                                <tr>
+                                    <th>Punto de venta</th>
+                                    <th>Cantidad</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--------------LISTA DISRIBUCIONES------------------->
+        <div class="modal fade" id="modalAsignarProducto" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar producto a punto de venta</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="select-punto-venta">Punto venta</label>
+                                <select id="select-punto-venta" class="form-select"></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="select-producto">Producto</label>
+                                <select id="select-producto" class="form-select"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary"
+                        onclick="AsignarProdutoPuntoVenta()">Agregar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <%- include('../partials/footer'); %>
+    <%- include('../partials/scripts'); %>
+    <script src="js/produccionUp.js"></script>
+</body>
+    <script>
+        var modalDistribucion = new bootstrap.Modal(document.getElementById('modalDistribucion'), {keyboard: false});
+        var modalAsignarProducto = new bootstrap.Modal(document.getElementById('modalAsignarProducto'), {keyboard: false});
+        var modalMostrarDistribucion = new bootstrap.Modal(document.getElementById('modalMostrarDistribucion'), {keyboard: false});
+        Lista_Productos();
+        Listar_Punto_Venta();
+        Listar_Producciones();
+        function Distribuir(){
+            let punto_venta = document.getElementById('punto-venta').value;
+            let id_produccion = document.getElementById('id-produccion').value;
+            let cantidad = document.getElementById('cantidad-distribuir').value;
+            if(cantidad <= 0) return launchAlert({icon: 'error', message: 'Digita una cantidad válida'});
+            //-----------------------------
+            let datos = new URLSearchParams;
+            datos.append('cantidad',cantidad)
+            datos.append('punto_venta', punto_venta)
+            datos.append('id_produccion', id_produccion)
+            fetch('/Asignar_Inventario',{
+                method:'post',
+                body: datos,
+                headers: {'Authorization': 'Bearer '+ token}
+            })
+            .then(res=>res.json())
+            .then(data=>{
+                if(data.status == 'error') return launchAlert({icon: 'error', message: data.message});
+                Listar_Producciones();
+                launchAlert({icon: 'success', message: data.message});
+                modalDistribucion.hide();
+            });
+        }
+        function ModalDistribucion(id_produccion, producto, id_pdto) {
+            document.getElementById('id-produccion').value = id_produccion;
+            document.getElementById('producto-distribucion').value = producto;
+            document.getElementById('id-producto').value = id_pdto;
+            document.getElementById('cantidad-distribuir').value = '';
+            Listar_Punto_Venta_Producto(id_pdto);
+            modalDistribucion.show();
+        }
+        function Listar_Producciones(){
+            let valor = document.getElementById("unidadesPrd"). value;
+            let datos = new URLSearchParams;
+            datos.append('unidad',valor)
+            fetch('/Listar_Produccion_Pendiente',{
+                method:'post',
+                body: datos,
+                headers: {'Authorization': 'Bearer '+ token}
+            }).then(res=>res.json())
+            .then(data=>{
+                if(data.status == 401) return console.log(data);
+                let array = [];
+                let i = 0;
+                data.forEach(element => {
+                    i++;
+                    let distribuido = 0;
+                    if(element.Distribuido) distribuido = element.Distribuido;
+                    if(distribuido > 0){
+                        distribuido = `<a href="javascript:Listar_Distribucion(${element.Id_produccion});">${distribuido}</a>`;
+                    }
+                    let json = {
+                        'no': i,
+                        'up' : element.nomb_up,
+                        'producto': element.producto,
+                        'producido': element.Producido,
+                        'distribuido': distribuido,
+                        'disponible': element.Disponible,
+                        'observacion': element.producto,
+                        'fecha': formatDate(element.fecha),
+                        'accion': `<button class="btn btn-primary"
+                        onclick="ModalDistribucion('${element.Id_produccion}','${element.producto}', '${element.Codigo_pdto}')">Distribuir</button>`,
+                    }
+                    array.push(json);
+                });
+                $('#tablaProducccion').DataTable({
+                    "paging":true,
+                    "autoWidth": false,
+                    "processing":true,
+                    "responsive":true,
+                    "destroy":true,
+                    "data":array,
+                    dom: 'Bfrtip',
+                    columns:[
+                        {"data": 'no'},
+                        {"data": "up"},
+                        {"data": "producto"},
+                        {"data": "producido"},
+                        {"data": "distribuido"},
+                        {"data": "disponible"},
+                        {"data": "observacion"},
+                        {"data": "fecha"},
+                        {"data": "accion"},
+                    ]
+                });
+                mostrarproductos(valor);
+            });
+        }
+        function Listar_Distribucion(id_produccion){
+            modalMostrarDistribucion.show()
+            var datos = new URLSearchParams();
+            datos.append('id_produccion', id_produccion);
+            fetch('/Listar_Distribucion',{   
+                method:'post',
+                body:datos,
+                headers: {
+                    'Authorization': 'Bearer '+ token,
+                }
+            }).then(res=>res.json())
+            .then(datos=>{
+                if(datos.status == 401) return console.log(datos);
+                $('#table-distribuciones').DataTable({
+                    destroy: true,
+                    paging: false,
+                    searching: false,
+                    autoWidth: false,
+                    info: false,
+                    data: datos,
+                    columns:[
+                        {"data":"Nombrepunt"},
+                        {"data":"cantidadbodega"},
+                        {"data":"fechabodega"}
+                    ]
+                })
+                console.log(datos)
+            });
+        
+        }
+        function Listar_Punto_Venta_Producto(id_pdto){
+            let datos = new URLSearchParams;
+            datos.append('producto', id_pdto)
+            fetch('/Listar_Punto_Venta_Producto',{
+                method:'post',
+                body: datos,
+                headers: {'Authorization': 'Bearer '+ token}
+            }).then(res=>res.json())
+            .then(data => {
+                var pvSelect = document.getElementById('punto-venta');
+                let options = '';
+                data.forEach(element => {
+                    options += `<option value="${element.Id_punto_vent}">${element.Nombre}</option>`
+                });
+                pvSelect.innerHTML = options;
+            })
+        }
+        function ModalAsignarProducto(){modalAsignarProducto.show()}
+        function Listar_Punto_Venta(){
+            fetch('/Lista_Punto_Venta',{   
+                method:'GET',
+                headers: {
+                    'Authorization': 'Bearer '+ token,
+                }
+            }).then(res=>res.json())
+            .then(data=>{
+                var pvSelect = document.getElementById('select-punto-venta');
+                let options = '';
+                data.forEach(element => {
+                    options += `<option value="${element.Id_punto_vent}">${element.Nombre}</option>`
+                });
+                pvSelect.innerHTML = options;
+            });
+        
+        }
+        function Lista_Productos() {
+            fetch('/Listar_Productos', {
+                method: 'get',
+                headers: {'Authorization': 'Bearer ' + token,}
+            }).then(res => res.json())
+            .then(data => {
+                if (data.status == 401) return console.log('No autorizado');
+                var productoSelect = document.getElementById('select-producto');
+                let options = '';
+                data.forEach(element => {
+                    options += `<option value="${element.Codigo_pdto}">${element.Nombre_pdto}</option>`
+                });
+                productoSelect.innerHTML = options;
+            });
+        }
+        function AsignarProdutoPuntoVenta(){
+            let id_producto = document.getElementById('select-producto').value;
+            let id_punto_venta = document.getElementById('select-punto-venta').value;
+            var datos= new URLSearchParams();
+            datos.append('id_producto', id_producto);
+            datos.append('id_punto_venta', id_punto_venta);       
+            fetch('/Registrar_inventario',{
+                method:'post',
+                body:datos,
+                headers: {'Authorization': 'Bearer '+ token}
+            }).then(res=>res.json())
+            .then(data=>{
+                if(data.status == 401) return console.log(data);
+                if(data.status == 'success'){
+                    launchAlert({icon: 'success', message: data.message});
+                    modalAsignarProducto.hide()
+                } else {
+                    launchAlert({icon: 'error', message: data.message});
+                }
+            });
+        }
+    </script>
+</html>
